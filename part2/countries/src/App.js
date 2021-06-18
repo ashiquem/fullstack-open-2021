@@ -1,44 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios'
-import './App.css';
-
-const CountryQuery = (props) => {
-  return (
-    <div>
-      find countries <input onChange={props.onChange} value={props.value}></input>
-    </div>
-  )
-}
-
-const CountryList = (props) => {
-  const countries = props.countries;
-  const countryView = props.countryView;
-  return (
-    <div>
-      {countries.map(country =>
-        countryView && countryView.name === country.name ?
-          <Country key={country.name} country={countryView}></Country> :
-          <p key={country.name}>{country.name} <button onClick={() => props.onClick(country)}>show</button></p>
-      )}
-    </div>
-  )
-}
-
-const Country = (props) => {
-  const country = props.country
-  return (
-    <div>
-      <h1>{country.name}</h1>
-      <p>capital {country.capital}</p>
-      <p>population {country.population}</p>
-      <h2>languages</h2>
-      <ul>
-        {country.languages.map(language => <li key={language.name}>{language.name}</li>)}
-      </ul>
-      <img src={country.flag} alt={`Flag for ${country.name}`} width="120px" ></img>
-    </div>
-  )
-}
+import Country from './components/Country';
+import CountryList from './components/CountryList';
+import CountryQuery from './components/CountryQuery';
 
 const App = () => {
 
@@ -52,7 +16,6 @@ const App = () => {
     axios.get(`https://restcountries.eu/rest/v2/all/`)
       .then(response => {
         const allCountries = response.data
-        console.log(allCountries)
         setCountries(allCountries)
       })
   }, [])
@@ -62,10 +25,7 @@ const App = () => {
     setCountryDetail(country)
   }, [queryResult])
 
-  console.log('current countries:', countries, query);
-
   const handleShowOnClick = (country) => {
-    console.log(`${country.name} clicked`);
     setCountryView(country);
   }
 
@@ -73,14 +33,14 @@ const App = () => {
     const queryValue = event.target.value
     setQuery(queryValue);
 
-    const filteredResults = queryValue ? countries.filter(country =>
-      country.name.toLowerCase().search(queryValue.toLowerCase()) !== -1) : []
-    setQueryResult(filteredResults)
+    setQueryResult(queryValue ? countries.filter(country =>
+      country.name.toLowerCase().search(queryValue.toLowerCase()) !== -1) : [])
   }
 
   const excessResultsRender = queryResult.length > 10 ? <div>Too many results, specify another filter</div> : null
 
-  const countryListRender = queryResult.length < 10 && !countryDetail.name ? <CountryList countryView={countryView} onClick={handleShowOnClick} countries={queryResult}></CountryList> : null
+  const countryListRender = queryResult.length < 10 && !countryDetail.name ?
+    <CountryList countryView={countryView} onClick={handleShowOnClick} countries={queryResult}></CountryList> : null
 
   const countryDetailRender = countryDetail.name ? <Country country={countryDetail}></Country> : null
 
