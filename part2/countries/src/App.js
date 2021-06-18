@@ -12,9 +12,14 @@ const CountryQuery = (props) => {
 
 const CountryList = (props) => {
   const countries = props.countries;
+  const countryView = props.countryView;
   return (
     <div>
-      {countries.map(country => <p key={country.name}>{country.name}</p>)}
+      {countries.map(country =>
+        countryView && countryView.name === country.name ?
+          <Country key={country.name} country={countryView}></Country> :
+          <p key={country.name}>{country.name} <button onClick={() => props.onClick(country)}>show</button></p>
+      )}
     </div>
   )
 }
@@ -41,6 +46,7 @@ const App = () => {
   const [countries, setCountries] = useState([])
   const [queryResult, setQueryResult] = useState([])
   const [countryDetail, setCountryDetail] = useState({})
+  const [countryView, setCountryView] = useState({})
 
   useEffect(() => {
     axios.get(`https://restcountries.eu/rest/v2/all/`)
@@ -51,12 +57,17 @@ const App = () => {
       })
   }, [])
 
-  useEffect(()=>{
+  useEffect(() => {
     const country = queryResult.length === 1 ? queryResult[0] : {}
     setCountryDetail(country)
-  },[queryResult])
+  }, [queryResult])
 
   console.log('current countries:', countries, query);
+
+  const handleShowOnClick = (country) => {
+    console.log(`${country.name} clicked`);
+    setCountryView(country);
+  }
 
   const handleQueryOnchange = (event) => {
     const queryValue = event.target.value
@@ -68,14 +79,13 @@ const App = () => {
   }
 
   const excessResultsRender = queryResult.length > 10 ? <div>Too many results, specify another filter</div> : null
-  
-  const countryListRender = queryResult.length < 10 && !countryDetail.name ? <CountryList countries={queryResult}></CountryList> : null
-  
+
+  const countryListRender = queryResult.length < 10 && !countryDetail.name ? <CountryList countryView={countryView} onClick={handleShowOnClick} countries={queryResult}></CountryList> : null
+
   const countryDetailRender = countryDetail.name ? <Country country={countryDetail}></Country> : null
 
   return (
     <div>
-      <div>debug {query}</div>
       <CountryQuery onChange={handleQueryOnchange} value={query}></CountryQuery>
       {excessResultsRender}
       {countryListRender}
