@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import SearchFilter from './components/SearchFilter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
+import Notification from './components/Notification'
 import personService from './services/persons'
 
 const App = () => {
@@ -10,6 +11,8 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [filterName, setFilterName] = useState('')
   const [filterPersons, setFilterPersons] = useState(persons)
+  const [notificationMessage, setNotificationMessage] = useState(null)
+  const [notificationStyle, setNotificationStyle] = useState('success')
 
   useEffect(() => {
     personService
@@ -19,15 +22,29 @@ const App = () => {
       })
   }, [])
 
+  useEffect(()=>{
+    setNewName('')
+    setNewNumber('')
+  },[persons])
+
+  const displayNotification = (message, style, timeout) => {
+    setNotificationStyle(style)
+    setNotificationMessage(message)
+          setTimeout(()=>{
+            setNotificationMessage(null)
+          },timeout)
+  }
+
   const handlePersonDelete = (id,name) => {
     if(window.confirm(`Delete ${name} ?`))
     {
       personService.deleteResource(id)
       .then(()=>{
         setPersons(persons.filter(p=>p.id !== id))
+        displayNotification(`Deleted ${name}`,'success',5000)
       })
       .catch(error=>{
-        alert(`could not delete ${name}`)
+        displayNotification(`Failed not delete ${name}`,'error',5000)
       })
     }
   }
@@ -49,13 +66,6 @@ const App = () => {
     event.preventDefault();
 
     const existingPerson = persons.find(person => person.name === newName)
-    const invalidPerson = newName === '' ||  newNumber === ''
-    if(invalidPerson)
-    {
-      alert('Please enter a valid name and number')
-      return
-    }
-    
     const newPerson = {
       name: newName,
       number: newNumber
@@ -67,6 +77,15 @@ const App = () => {
         personService.update(existingPerson.id,newPerson)
         .then(updatedPerson => {
           setPersons(persons.map(p=> p.id !== existingPerson.id ? p : updatedPerson))
+          displayNotification(`Updated ${updatedPerson.name}`,'success',5000)
+        })
+        .catch(error=>{
+          displayNotification(`Information of ${existingPerson.name} has already been removed from server`,'error',5000)
+          personService
+          .getAll()
+          .then(fetchedPersons => {
+            setPersons(fetchedPersons)
+          })
         })
       }
     }
@@ -74,8 +93,7 @@ const App = () => {
       personService.create(newPerson)
         .then(returnedPerson => {
           setPersons(persons.concat(returnedPerson));
-          setNewName('')
-          setNewNumber('')
+          displayNotification(`Added ${returnedPerson.name}`,'success',5000)
         })
     }
   }
@@ -83,6 +101,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={notificationMessage} styleClass={notificationStyle}></Notification>
       <SearchFilter filterName={filterName} handleFilterNameChange={handleFilterNameChange}></SearchFilter>
       <h2>Add a new number</h2>
       <PersonForm
