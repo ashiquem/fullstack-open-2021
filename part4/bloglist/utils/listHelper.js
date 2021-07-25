@@ -1,15 +1,11 @@
+const _ = require('lodash')
+
 const dummy = (blogs) => 1
 
 const totalLikes = (blogs) => {
   const reducer = (sum, currentBlog) => sum + currentBlog.likes
 
   return blogs.reduce(reducer,0)
-}
-
-const sumReducer = (array) => {
-  const reducer = (sum, current) => sum + current
-
-  return array.reduce(reducer)
 }
 
 const favoriteBlog = (blogs) => {
@@ -25,8 +21,38 @@ const favoriteBlog = (blogs) => {
   return blog
 }
 
+const mostBlogs = (blogs) => {
+
+  const grouped = _.groupBy(blogs,'author')
+
+  const topAuthorBlogs = _.orderBy(grouped,'length',['desc'])[0]
+
+  const result = {
+    author: topAuthorBlogs[0].author,
+    blogs: topAuthorBlogs.length
+  }
+
+  return result
+}
+
+const mostLikes = (blogs) => {
+  const grouped = _.groupBy(blogs,'author')
+
+  const reducer = (sum, currentBlog) => sum + currentBlog.likes
+
+  const authorLikes = []
+
+  _.forEach(grouped,(value,key) => {
+    authorLikes.push({ 'author':key,'likes':value.reduce(reducer,0) })
+  })
+
+  return _.orderBy(authorLikes,'likes',['desc'])[0]
+}
+
 module.exports = {
   dummy,
   totalLikes,
-  favoriteBlog
+  favoriteBlog,
+  mostBlogs,
+  mostLikes
 }
