@@ -32,7 +32,12 @@ app.use(express.json());
 app.use(middleware.requestLogger);
 app.use(middleware.tokenExtractor);
 
-app.use(constants.URLS.blogs, blogsRouter);
+app.use(
+  constants.URLS.blogs,
+  middleware.tokenValidator,
+  middleware.userExtractor,
+  blogsRouter
+);
 app.use(constants.URLS.users, usersRouter);
 app.use(constants.URLS.login, loginRouter);
 
