@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const supertest = require('supertest');
 const app = require('../app');
 const api = supertest(app);
-const bcrypt = require('bcrypt');
 const helper = require('./test_helper');
 const User = require('../models/user');
 const constants = require('../utils/constants');
@@ -26,13 +25,7 @@ describe(`when there is initially ${initialUsers.length} user in db`, () => {
     await User.deleteMany({});
 
     const users = await Promise.all(
-      initialUsers.map(async (user) => {
-        return new User({
-          username: user.username,
-          name: user.name,
-          passwordHash: await bcrypt.hash(user.password, 10),
-        });
-      })
+      initialUsers.map(async (user) => helper.createUser(user))
     );
 
     const userSaveCalls = users.map((user) => user.save());
